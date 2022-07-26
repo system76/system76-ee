@@ -60,10 +60,12 @@ function parse_commandline()
             arg_type = String
         "--polling-rate", "-p"
 	    help = "The rate the 9801 is polled in Hertz (Hz). Also increases gui update rate and output lines output to csv. Too high of a value can waste memory and cause race conditions. No higher than 10 is recommended. Must be evenly divisible into 1 second (1, 2, 5 or 10)."
+	    arg_type = Int
 	    default = 2
 	"--run-time", "-r", "-t"
 	    help = "The length of time the test will run in seconds. This may be adjusted automatically to match the polling rate."
 	    default = 330
+	    arg_type = Int
     end
 
     return parse_args(s)
@@ -82,8 +84,8 @@ const parsed_args = parse_commandline()
 const no_csv = parsed_args["no-csv"]
 const no_gui = parsed_args["no-gui"]
       csv_name = parsed_args["csv-name"]
-if (parsed_args["polling-rate"] in ("1", "2", "5", "10"))
-  const polling_rate = parse(Int32, parsed_args["polling-rate"])
+if (parsed_args["polling-rate"] in (1, 2, 5, 10))
+  const polling_rate = parsed_args["polling-rate"]
 else
   println("Invalid polling rate. Setting to default of 2Hz.")
   const polling_rate = 2
@@ -99,7 +101,7 @@ const FREQ = "MEAS:FREQ?"
 const REAL = "MEAS:POW:REAL?"
 const APP  = "MEAS:POW:APP?"
 
-const iter_count_max = polling_rate * parse(Int32,run_time)
+const iter_count_max = polling_rate * run_time
 global spin_lock = false
 
 
@@ -131,6 +133,7 @@ try
     global no_gui
     if (!no_gui)
       gr()
+      theme(:dark)
     end
 
     start_time = missing
