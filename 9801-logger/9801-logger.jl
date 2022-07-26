@@ -12,8 +12,11 @@ function get_connection(rm)
     print("Only one connection available.\nOpening: '$(resources[1])'\n")
     rm.open_resource(resources[1])
   elseif (length(resources) > 1)
-    print("More than one open connection, please choose one:")
-    print(resources)
+    println("More than one open connection.")
+    for (index, name) in enumerate(resources)
+      println("  [$index] $name")
+    end
+    print("Please enter a number to choose one: ")
     input = parse(Int, readline())
     rm.open_resource(resources[input])
   else
