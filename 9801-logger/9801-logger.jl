@@ -193,12 +193,12 @@ try
     close(t)
     global NO_CSV
     if (!NO_CSV)
-      csv_data = DataFrame("Timestamp"      => timestamps,
-			   "Runtime"        => times,
-			   "Voltage [V]" => volts,
-                           "Frequencies"    => freqs,
-                           "Power_Real"     => reals,
-			   "Power_Apparent" => apps
+      csv_data = DataFrame("Timestamp [yyyy-mm-dd HH:MM:SS.sss]" => timestamps,
+			   "Runtime [s]"                                     => times,
+			   "Voltage [V]"                                     => volts,
+               "Frequency [Hz]"                                  => freqs,
+               "Real Power [W]"                                  => reals,
+			   "Apparent Power [W]"                              => apps
                           )
       global csv_name
       CSV.write(csv_name, csv_data)
