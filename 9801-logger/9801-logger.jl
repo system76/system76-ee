@@ -83,45 +83,45 @@ struct Recording
 end
 
 ### Consts
-const parsed_args = parse_commandline()
-const no_csv = parsed_args["no-csv"]
-const no_gui = parsed_args["no-gui"]
-      csv_name = parsed_args["csv-name"]
-if (parsed_args["polling-rate"] in (1, 2, 5, 10))
-  const polling_rate = parsed_args["polling-rate"]
+const PARSED_ARGS = parse_commandline()
+const NO_CSV = PARSED_ARGS["no-csv"]
+const NO_GUI = PARSED_ARGS["no-gui"]
+      csv_name = PARSED_ARGS["csv-name"]
+if (PARSED_ARGS["polling-rate"] in (1, 2, 5, 10))
+  const POLLING_RATE = PARSED_ARGS["polling-rate"]
 else
   println("Invalid polling rate. Setting to default of 2Hz.")
-  const polling_rate = 2
+  const POLLING_RATE = 2
 end
-const run_time = parsed_args["run-time"]
-const super_title = isnothing(parsed_args["title"]) ? "" : parsed_args["title"]
+const RUN_TIME = PARSED_ARGS["run-time"]
+const SUPER_TITLE = isnothing(PARSED_ARGS["title"]) ? "" : PARSED_ARGS["title"]
 
-const pyvisa = pyimport("pyvisa")
-const rm = pyvisa.ResourceManager()
-const connection = get_connection(rm)
+const PYVISA = pyimport("pyvisa")
+const RM = PYVISA.ResourceManager()
+const CONNECTION = get_connection(RM)
 
 const VOLT = "MEAS:VOLT?"
 const FREQ = "MEAS:FREQ?"
 const REAL = "MEAS:POW:REAL?"
 const APP  = "MEAS:POW:APP?"
 
-const iter_count_max = polling_rate * run_time
+const ITER_COUNT_MAX = POLLING_RATE * RUN_TIME
 global spin_lock = false
 
 
 ### Main
 try
-  if (!isnothing(connection))
+  if (!isnothing(CONNECTION))
 
     ### Argument parsing
     println("9801 Logger:")
-    is_polling_default = polling_rate == 2 ? "(Default)" : ""
+    is_polling_default = POLLING_RATE == 2 ? "(Default)" : ""
     is_name_default = isnothing(csv_name) ? "(Default)" : ""
-    is_runtime_default = run_time == 330 ? "(Default)" : ""
+    is_runtime_default = RUN_TIME == 330 ? "(Default)" : ""
     csv_name = isnothing(csv_name) ? Dates.format(Dates.now(), "yyyy-mm-dd_HH:MM:SS") * ".csv" : csv_name
-    println("  Polling Rate => $(polling_rate)Hz $is_polling_default")
-    println("  Run Time     => $run_time seconds $is_runtime_default")
-    if (!no_csv)
+    println("  Polling Rate => $(POLLING_RATE)Hz $is_polling_default")
+    println("  Run Time     => $RUN_TIME seconds $is_runtime_default")
+    if (!NO_CSV)
       println("  Output File  => $csv_name $is_name_default")
     end
 
@@ -134,34 +134,34 @@ try
     freqs      = []
     reals      = []
     apps       = []
-    global no_gui
-    if (!no_gui)
+    global NO_GUI
+    if (!NO_GUI)
       gr()
       # theme(:dark)
     end
 
     start_time = missing
 
-    t = Timer(unlock_spin, 0, interval=(1 / polling_rate))
+    t = Timer(unlock_spin, 0, interval=(1 / POLLING_RATE))
     wait(t)
     # Use a naieve spin lock to keep poll timings as close to the
     # timer as possible
-    while (iter_count <= iter_count_max)
+    while (iter_count <= ITER_COUNT_MAX)
       sleep(0.001)
       if (!spin_lock)
-	global no_gui
-	if (!no_gui)
+	global NO_GUI
+	if (!NO_GUI)
 	  p1 = plot(times, volts, label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
 	  p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
 	  p3 = plot(times, [reals, apps], label=["Real" "Apparent"], xlabel="Runtime [s]", ylabel="Power [W]", legend=:outertopright)
-	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title=super_title))
+	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title=SUPER_TITLE))
 	end
 
         if (ismissing(start_time))
 	  start_time = Dates.now()
         end
 
-        out = connection.query(concat_cmd([VOLT, FREQ, REAL, APP])) |> into_recording
+        out = CONNECTION.query(concat_cmd([VOLT, FREQ, REAL, APP])) |> into_recording
         time = round((Dates.value(out.time) - Dates.value(start_time)) / 1000, digits = 3)
 	timestamp =  Dates.format(out.time, "yyyy-mm-dd HH:MM:SS.sss")
 
@@ -173,7 +173,7 @@ try
         push!(apps,  out.app )
         push!(recordings, out)
 
-	if (no_gui)
+	if (NO_GUI)
 		println("$timestamp ($time): Volts=$(out.volt), Freq=$(out.freq), Pow-Real=$(out.real), Pow-App=$(out.app)")
 	end
 
@@ -182,8 +182,8 @@ try
       end
     end
     close(t)
-    global no_csv
-    if (!no_csv)
+    global NO_CSV
+    if (!NO_CSV)
       csv_data = DataFrame("Timestamp"      => timestamps,
 			   "Runtime"        => times,
 			   "Voltage [V]" => volts,
@@ -201,4 +201,4 @@ catch e
   print(e)
 end
 
-rm.close()
+RM.close()
