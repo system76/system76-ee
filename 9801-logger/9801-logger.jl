@@ -55,6 +55,9 @@ function parse_commandline()
 	"--no-gui", "-g"
 	    help = "Do not create a GUI ouput. Information will be printed via CLI."
 	    action = :store_true
+	"--title", "-t"
+	    help = "Set a super title for the gui graph output"
+	    arg_type = String
         "--csv-name", "-o", "-n"
             help = "The name given to the generated csv output."
             arg_type = String
@@ -62,7 +65,7 @@ function parse_commandline()
 	    help = "The rate the 9801 is polled in Hertz (Hz). Also increases gui update rate and output lines output to csv. Too high of a value can waste memory and cause race conditions. No higher than 10 is recommended. Must be evenly divisible into 1 second (1, 2, 5 or 10)."
 	    arg_type = Int
 	    default = 2
-	"--run-time", "-r", "-t"
+	"--run-time", "-r"
 	    help = "The length of time the test will run in seconds. This may be adjusted automatically to match the polling rate."
 	    default = 330
 	    arg_type = Int
@@ -91,6 +94,7 @@ else
   const polling_rate = 2
 end
 const run_time = parsed_args["run-time"]
+const super_title = isnothing(parsed_args["title"]) ? "" : parsed_args["title"]
 
 const pyvisa = pyimport("pyvisa")
 const rm = pyvisa.ResourceManager()
@@ -150,7 +154,7 @@ try
 	  p1 = plot(times, volts, label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
 	  p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
 	  p3 = plot(times, [reals, apps], label=["Real" "Apparent"], xlabel="Runtime [s]", ylabel="Power [W]", legend=:outertopright)
-	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title="Temp Title"))
+	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title=super_title))
 	end
 
         if (ismissing(start_time))
