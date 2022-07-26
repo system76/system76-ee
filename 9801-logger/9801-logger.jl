@@ -133,7 +133,7 @@ try
     global no_gui
     if (!no_gui)
       gr()
-      theme(:dark)
+      # theme(:dark)
     end
 
     start_time = missing
@@ -147,11 +147,10 @@ try
       if (!spin_lock)
 	global no_gui
 	if (!no_gui)
-          p1 = plot(times, volts, title="Volts",          label=false)
-          p2 = plot(times, freqs, title="Frequencies",    label=false)
-          p3 = plot(times, reals, title="Power Real",     label=false)
-          p4 = plot(times, apps,  title="Power Apparent", label=false)
-          display(plot(p1, p2, p3, p4))
+	  p1 = plot(times, volts, label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
+	  p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
+	  p3 = plot(times, [reals, apps], label=["Real" "Apparent"], xlabel="Runtime [s]", ylabel="Power [W]", legend=:outertopright)
+	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title="Temp Title"))
 	end
 
         if (ismissing(start_time))
@@ -181,12 +180,12 @@ try
     close(t)
     global no_csv
     if (!no_csv)
-      csv_data = DataFrame(Timestamp      = timestamps,
-			   Runtime        = times,
-               		   Voltage        = volts,
-                           Frequencies    = freqs,
-                           Power_Real     = reals,
-			   Power_Apparent = apps
+      csv_data = DataFrame("Timestamp"      => timestamps,
+			   "Runtime"        => times,
+			   "Voltage [V]" => volts,
+                           "Frequencies"    => freqs,
+                           "Power_Real"     => reals,
+			   "Power_Apparent" => apps
                           )
       global csv_name
       CSV.write(csv_name, csv_data)
