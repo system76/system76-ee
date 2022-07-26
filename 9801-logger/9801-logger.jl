@@ -69,6 +69,9 @@ function parse_commandline()
 	    help = "The length of time the test will run in seconds. This may be adjusted automatically to match the polling rate."
 	    default = 330
 	    arg_type = Int
+	"--pretty"
+	    help = "Make the graph theme dark"
+	    action = :store_true
     end
 
     return parse_args(s)
@@ -84,17 +87,18 @@ end
 
 ### Consts
 const PARSED_ARGS = parse_commandline()
-const NO_CSV = PARSED_ARGS["no-csv"]
-const NO_GUI = PARSED_ARGS["no-gui"]
-      csv_name = PARSED_ARGS["csv-name"]
+csv_name = PARSED_ARGS["csv-name"]
 if (PARSED_ARGS["polling-rate"] in (1, 2, 5, 10))
   const POLLING_RATE = PARSED_ARGS["polling-rate"]
 else
   println("Invalid polling rate. Setting to default of 2Hz.")
   const POLLING_RATE = 2
 end
+const NO_CSV = PARSED_ARGS["no-csv"]
+const NO_GUI = PARSED_ARGS["no-gui"]
 const RUN_TIME = PARSED_ARGS["run-time"]
 const SUPER_TITLE = isnothing(PARSED_ARGS["title"]) ? "" : PARSED_ARGS["title"]
+const PRETTY = PARSED_ARGS["pretty"]
 
 const PYVISA = pyimport("pyvisa")
 const RM = PYVISA.ResourceManager()
@@ -137,7 +141,9 @@ try
     global NO_GUI
     if (!NO_GUI)
       gr()
-      # theme(:dark)
+      if (PRETTY)
+        theme(:dark)
+      end
     end
 
     start_time = missing
