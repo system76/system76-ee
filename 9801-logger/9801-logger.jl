@@ -38,7 +38,7 @@ end
 function into_recording(out)
   r = map(rec -> replace(rec, " " => "", "\n" => "") , split(out, ";"))
   i = x -> parse(Float64, x)
-  Recording(Dates.now(), i(r[1]), i(r[2]), i(r[3]), i(r[4]))
+  Recording(Dates.now(), i(r[1]), i(r[2]), i(r[3]), i(r[4]), i(r[5]), i(r[6]), i(r[7]))
 end
 
 function unlock_spin(timer)
@@ -70,7 +70,7 @@ end
 
 function parse_commandline()
     s = ArgParseSettings(prog="9801 Logger",
-		         description="Connect to BK precision power supply and log recordings in both GUI and CSV",
+		         description="Connect to BK Precision power supply and log recordings in both GUI and CSV",
 			 commands_are_required=false
 			)
 
@@ -111,10 +111,13 @@ end
 
 struct Recording
   time::DateTime
-  volt::Float64
-  freq::Float64
-  real::Float64
-  app::Float64
+  volt::Float64 # Supply True RMS Voltage [V]
+  freq::Float64 # Supply Frequency [Hz]
+  real::Float64 # Supply Real Power [W]
+  app::Float64  # Supply Apparent Power [VA]
+  pfac::Float64 # Supply Power Factor
+  curr::Float64 # Supply True RMS Current [A]
+  apk::Float64  # Supply Peak Current [A]
 end
 
 ### Consts
@@ -143,6 +146,9 @@ const VOLT = "MEAS:VOLT?"
 const FREQ = "MEAS:FREQ?"
 const REAL = "MEAS:POW:REAL?"
 const APP  = "MEAS:POW:APP?"
+const PFAC = "MEAS:POW:PFAC?"
+const CURR = "MEAS:CURR?"
+const APK  = "MEAS:CURR:PEAK?"
 
 const ITER_COUNT_MAX = POLLING_RATE * RUN_TIME
 global spin_lock = false
@@ -169,15 +175,18 @@ try
     end
 
     global spin_lock
-    iter_count = 0
-    recordings = []
-    timestamps = []
-    times      = []
-    volts      = []
+    iter_count   = 0
+    recordings   = []
+    timestamps   = []
+    times        = []
+    volts        = []
     volts_bounds = []
-    freqs      = []
-    reals      = []
-    apps       = []
+    freqs        = []
+    reals        = []
+    apps         = []
+    pfacs        = []
+    currs        = []
+    apks         = []
 
     global NO_GUI
     if (!NO_GUI)
@@ -208,7 +217,7 @@ try
 	  start_time = Dates.now()
         end
 
-        out = CONNECTION.query(concat_cmd([VOLT, FREQ, REAL, APP])) |> into_recording
+        out = CONNECTION.query(concat_cmd([VOLT, FREQ, REAL, APP, PFAC, CURR, APK])) |> into_recording
         time = round((Dates.value(out.time) - Dates.value(start_time)) / 1000, digits = 3)
 	timestamp =  Dates.format(out.time, "yyyy-mm-dd HH:MM:SS.sss")
 
@@ -264,10 +273,13 @@ try
         push!(timestamps, timestamp)
         push!(times, time    )
         push!(volts, out.volt)
-	      push!(volts_bounds, volt_safe ? NaN : out.volt)
+	push!(volts_bounds, volt_safe ? NaN : out.volt)
         push!(freqs, out.freq)
         push!(reals, out.real)
         push!(apps,  out.app )
+        push!(pfacs, out.pfac)
+        push!(currs, out.curr)
+        push!(apks,  out.apk )
         push!(recordings, out)
 
 	if (NO_GUI)
@@ -281,12 +293,15 @@ try
     close(t)
     global NO_CSV
     if (!NO_CSV)
-      csv_data = DataFrame("Timestamp"      => timestamps,
-			   "Runtime"        => times,
-			   "Voltage [V]" => volts,
-                           "Frequencies"    => freqs,
-                           "Power_Real"     => reals,
-			   "Power_Apparent" => apps
+      csv_data = DataFrame("Timestamp [yyyy-mm-dd HH:MM:SS.sss]" => timestamps,
+                           "Runtime [s]"                         => times,
+                           "True RMS Voltage [V]"                => volts,
+                           "Frequency [Hz]"                      => freqs,
+                           "True RMS Real Power [W]"             => reals,
+                           "True RMS Apparent Power [W]"         => apps,
+                           "Power Factor"                        => pfacs,
+                           "True RMS Current [A]"                => currs,
+                           "Peak Current [A]"                    => apks
                           )
       global csv_name
       CSV.write(csv_name, csv_data)
