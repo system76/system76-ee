@@ -210,7 +210,8 @@ try
 	  p1 = plot(times, [volts, volts_bounds], label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
 	  p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
 	  p3 = plot(times, [reals, apps], label=["Real" "Apparent"], xlabel="Runtime [s]", ylabel="Power [W]", legend=:outertopright)
-	  display(plot(p1, p2, p3, layout=@layout([p1 p2; p3]), plot_title=SUPER_TITLE))
+	  p4 = (itter_count > 0) ? histogram([apps, reals],label=["Apparent [VA]" "Real [W]"], xlabel="Power", legend=:outertopright) : histogram([11,12,13,14,15])
+	  display(plot(p1, p2, p3, p4, layout=@layout([p1 p2; p3; p4]), plot_title=SUPER_TITLE))
 	end
 
         if (ismissing(start_time))
