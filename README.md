@@ -31,7 +31,7 @@ ___
 
 Recognizing your USBTMC connection is critical, especially if you have multiple VISA devices connected. An example USBTMC connection is `USB0::65535::38912::802XXXXXXX::0::INSTR`
 
-In the *pyvisa-shell*, one can open a USB connection and query the instrument's product information (manufacturer, model number, serial number, and firmware revision number) with the following command:
+In the *pyvisa-shell*, one can open an USB connection and query the instrument's product information (manufacturer, model number, serial number, and firmware revision number) with the following command:
 ```
 query *IDN?
 ```
@@ -43,7 +43,7 @@ query *IDN?
 Within the *pyvisa-shell*, one can run the following:
 
 ```
-query MEAS:VOLT?;FREQ?;:MEAS:POW:REAL?;POW:APP?
+query MEAS:VOLT?;:MEAS:FREQ?;:MEAS:POW:REAL?;:MEAS:POW:APP?
 ```
 
 This line breaks down output into the Output Voltage, Frequency, Real Power and Apparent Power.
