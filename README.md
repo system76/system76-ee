@@ -1,5 +1,4 @@
 # Power Testing
-Updated: 2022/07/27
 
 Resources:
 + [PyVISA Docs](https://pyvisa.readthedocs.io/en/latest/introduction/getting.html)
@@ -10,7 +9,7 @@ Packages Required:
 + pyvisa-py
 + pyusb
 
-Helpful Commands in Terminal Emulator:
+Helpful Commands in Terminal Emulator with access to the Python interpreter:
 + pyvisa-info
 + pyvisa-shell
 
@@ -20,6 +19,19 @@ Confirmed to work with:
 
 
 On Linux, you may come across a `udev` issue, preventing you from having permissions to communicate with the device. The solution can be found [here](https://stackoverflow.com/questions/66480203/pyvisa-not-listing-usb-instrument-on-linux).
+
+#### Setting Up the Environment
+Installation and setup for the program goes as follows (installing on Pop!\_OS):
+1. Install Julia with apt: `sudo apt install julia`
+2. Enter the Julia REPL: `julia`
+3. Enter the package subspace: `]`
+4. Add the Julia packages: `add Conda PyCall DataFrames ArgParse CSV`
+5. Go back to the Julia REPL and set the Python environment to Julia's internal Python: `ENV["PYTHON"]=""`
+6. Rebuild PyCall in the package subspace: `]build PyCall`
+7. Back in the Julia REPL, use Conda: `using Conda`
+8. Add pyvisa-py and dependancies to the environment: `Conda.add("pyvisa-py")`
+9. Exit the Julia REPL: `exit()`
+10. Change `udev` permissions, if not done already, and then reboot: `sudo echo 'SUBSYSTEM=="usb", MODE="0666", GROUP="usbusers"' >> /etc/udev/rules.d/99-com.rules`
 
 
 ___
