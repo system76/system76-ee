@@ -25,7 +25,7 @@ Installation and setup for the program goes as follows (installing on Pop!\_OS):
 1. Install Julia with apt: `sudo apt install julia`
 2. Enter the Julia REPL: `julia`
 3. Enter the package subspace: `]`
-4. Add the Julia packages: `add Conda PyCall DataFrames ArgParse CSV`
+4. Add the Julia packages: `add Conda PyCall DataFrames ArgParse CSV Plots`
 5. Go back to the Julia REPL and set the Python environment to Julia's internal Python: `ENV["PYTHON"]=""`
 6. Rebuild PyCall in the package subspace: `]build PyCall`
 7. Back in the Julia REPL, use Conda: `using Conda`
