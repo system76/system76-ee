@@ -10,9 +10,9 @@ ___
 #### i. Sub-300VA Power Demand
 Confirm the following:
 1. Power line conditioner is connected to 120Vac wall outlet.
-1. AC power source is connected to power line conditioner. Settings should be set to 115V at 60Hz, and Communication set to USB.
+1. AC power source is connected to power line conditioner. Settings should be set to 115V at 60Hz, and _Communication_ set to _USB_.
 1. DUT is connected to AC power source.
-1. If DUT has an ethernet connection, connect it to a network switch/router and is confirm it is the only device connected. 
+1. If DUT has an ethernet connection, connect it to a network switch/router and confirm it is the only device connected. 
 1. Assessor's computer should be connected to the AC power source's USB connection.
 1. Desktop monitor is connected to either the power line conditioner or a separate power source (i.e. wall outlet).
 1. Wired mouse and keyboard are connected to DUT USB.
@@ -26,9 +26,9 @@ MAKE SURE LAPTOP IS FULLY CHARGED BEFORE TESTING.
 #### i. Sub-300VA Power Demand
 Confirm the following:
 1. Power line conditioner is connected to 120Vac wall outlet.
-1. AC power source is connected to power line conditioner. Settings should be set to 115V at 60Hz, and Communication set to USB.
-1. Device Under Test (DUT) is connected to AC power source.
-1. If DUT has an ethernet connection, connect it to a network switch/router and is confirm it is the only device connected. 
+1. AC power source is connected to power line conditioner. Settings should be set to 115V at 60Hz, and _Communication_ set to _USB_.
+1. DUT is connected to AC power source.
+1. If DUT has an ethernet connection, connect it to a network switch/router and confirm it is the only device connected. 
 1. Assessor's computer should be connected to the AC power source's USB connection.
 
 
@@ -51,19 +51,17 @@ Record the following:
 
 ### II. Short Idle
 1. Turn on machine and log in. Make sure all windows are closed. 
-2. Let the machine idle for a couple of minutes such that the DUT reaches a steady state.
+2. Let the machine idle for a 5 minutes such that the DUT reaches a steady state.
 3. Run 9801-logger.jl to collect at least 5 minutes (300sec) of data. Make sure the screen never dims or goes blank during data collection.
 
 ### III. Long Idle
 1. Let the screen go blank (do not force it).
-2. After a couple of minutes, run 9801-logger.jl again to collect at least 5 minutes of data. Make sure the DUT does not suspend during data collection.
-
+2. After 5 minutes (20min into the test), run 9801-logger.jl again to collect at least 5 minutes of data. Make sure the DUT does not suspend during data collection.
 
 ### IV. Sleep/Suspend
 1. Let the DUT suspend (do not force it).
-2. After a couple of minutes run 9801-logger.jl again to collect at least 5 minutes of data. Make sure the DUT does not wake during data collection.
-
+2. Within a minute of suspending, run 9801-logger.jl again to collect at least 5 minutes of data. Make sure the DUT does not wake during data collection.
 
 ### V. Off
 1. Wake the DUT and command it to power off.
-2. After a couple of minutes, run 9801-logger.jl again to collect at least 5 minutes of data. 
+2. After powering off, run 9801-logger.jl again to collect at least 5 minutes of data. 
