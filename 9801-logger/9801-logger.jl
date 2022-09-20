@@ -4,6 +4,7 @@ using CSV
 using Plots
 using DataFrames
 using ArgParse
+using Statistics
 
 ### Helper Functions
 function get_connection(rm)
@@ -166,8 +167,8 @@ try
     csv_name = isnothing(csv_name) ? Dates.format(Dates.now(), "yyyy-mm-dd_HH:MM:SS") * ".csv" : csv_name
     println("  Polling Rate => $(POLLING_RATE)Hz $is_polling_default")
     println("  Run Time     => $RUN_TIME seconds $is_runtime_default")
-    println("  Volt Min     => $VOLT_MIN seconds $is_volt_min_default")
-    println("  Volt Max     => $VOLT_MAX seconds $is_volt_max_default")
+    println("  Volt Min     => $VOLT_MIN volts $is_volt_min_default")
+    println("  Volt Max     => $VOLT_MAX volts $is_volt_max_default")
     if (!NO_CSV)
       println("  Output File  => $csv_name $is_name_default")
     end
@@ -207,8 +208,8 @@ try
 	      if (!NO_GUI)
 	        p1 = plot(times, [volts, volts_bounds], label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
 	        p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
-	        p3 = plot(times, [reals, apps], label=["Real [W]" "Apparent [VA]"], xlabel="Runtime [s]", ylabel="Power", legend=:outertopright)
-	        p4 = (iter_count > 0) ? histogram([apps, reals],label=["Apparent [VA]" "Real [W]"], xlabel="Power", legend=:outertopright) : histogram([11,12,13,14,15])
+	        p3 = plot(times, [apps, reals], label=["Apparent [VA]" "Real [W]"], xlabel="Runtime [s]", ylabel="Power", legend=:outertopright)
+	        p4 = (iter_count > 0) ? histogram([apps, reals],label=["Apparent [VA]" "Real [W]"], xlabel="Power", legend=:outertopright, linecolor=:match) : histogram([11,12,13,14,15], linecolor=:match)
 	        display(plot(p1, p2, p3, p4, layout=@layout([p1 p2; p3; p4]), plot_title=SUPER_TITLE))
 	      end
 
@@ -307,6 +308,8 @@ try
       global csv_name
       CSV.write(csv_name, csv_data)
     end
+    reals_mean = round.(mean(reals), digits=2)
+    println("$(reals_mean)")
     print("Recordings done. Press [Enter] to close.")
     readline()
   end
