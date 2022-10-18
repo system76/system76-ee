@@ -108,6 +108,12 @@ function parse_commandline()
     "--automated-test", "-a"
       help = "Perform a semi-automated Title 20 test run"
       action = :store_true
+    "--model"
+      help = "The system model name - for use with automated test"
+      arg_type = String
+    "--test-num", "-t"
+      help = "The test number - for use with automated test"
+      arg_type = Int
     end
   return parse_args(s)
 end
@@ -141,6 +147,8 @@ const err = 0.01 # voltage tolerance
 const VOLT_MIN = isnothing(PARSED_ARGS["volt-min"]) ? (1 - err) * 115 : PARSED_ARGS["volt-min"]
 const VOLT_MAX = isnothing(PARSED_ARGS["volt-max"]) ? (1 + err) * 115 : PARSED_ARGS["volt-max"]
 const AUTOMATED = PARSED_ARGS["automated-test"]
+const MODEL = PARSED_ARGS["model"]
+const TEST_NUM = PARSED_ARGS["test-num"]
 
 const PYVISA = pyimport("pyvisa")
 const RM = PYVISA.ResourceManager()
@@ -203,7 +211,7 @@ try
 
     t = Timer(unlock_spin, 0, interval=(1 / POLLING_RATE))
     wait(t)
-    # Use a naieve spin lock to keep poll timings as close to the
+    # Use a naive spin lock to keep poll timings as close to the
     # timer as possible
     while (iter_count <= ITER_COUNT_MAX)
       sleep(0.001)
