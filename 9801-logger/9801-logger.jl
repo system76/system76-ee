@@ -140,6 +140,7 @@ const PRETTY = PARSED_ARGS["pretty"]
 const err = 0.01 # voltage tolerance
 const VOLT_MIN = isnothing(PARSED_ARGS["volt-min"]) ? (1 - err) * 115 : PARSED_ARGS["volt-min"]
 const VOLT_MAX = isnothing(PARSED_ARGS["volt-max"]) ? (1 + err) * 115 : PARSED_ARGS["volt-max"]
+const AUTOMATED = PARSED_ARGS["automated-test"]
 
 const PYVISA = pyimport("pyvisa")
 const RM = PYVISA.ResourceManager()
@@ -287,7 +288,7 @@ try
         push!(apks,  out.apk )
         push!(recordings, out)
 
-        if (NO_GUI)
+        if (NO_GUI && !AUTOMATED)
           println("$timestamp ($time): Volts=$(out.volt), Freq=$(out.freq), Pow-Real=$(out.real), Pow-App=$(out.app)")
         end
 
