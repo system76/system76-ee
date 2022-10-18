@@ -105,6 +105,9 @@ function parse_commandline()
     "--pretty"
       help = "Make the graph theme dark"
       action = :store_true
+    "--automated-test", "-a"
+      help = "Perform a semi-automated Title 20 test run"
+      action = :store_true
     end
   return parse_args(s)
 end
