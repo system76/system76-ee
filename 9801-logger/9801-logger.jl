@@ -357,8 +357,8 @@ try
         print("Recordings done. Press [Enter] to close.")
         readline()
       end
+      test_count += 1
     end
-    test_count += 1
   end
 catch e
   println(e)
