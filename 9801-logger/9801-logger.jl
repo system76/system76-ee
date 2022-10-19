@@ -348,6 +348,7 @@ try
         global csv_name
         if (AUTOMATED)
           csv_name = "$(CSV_PREFIX)$(TESTS[test_count]).csv"
+          println("  Output File  => $csv_name")
         end
         CSV.write(csv_name, csv_data)
       end
