@@ -347,7 +347,7 @@ try
         readline()
       end
     end
-    if (AUTOMATED)
+    if (AUTOMATED && test_count < 3)
       index = test_count + 1
       sleep(TEST_TIMES[index])
     end
