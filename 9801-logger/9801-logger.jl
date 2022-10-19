@@ -230,6 +230,10 @@ try
     # Use a naive spin lock to keep poll timings as close to the
     # timer as possible
     while (test_count < TEST_RUNS)
+      if (AUTOMATED && test_count < 3)
+        index = test_count + 1
+        sleep(TEST_TIMES[index])
+      end
       while (iter_count < ITER_COUNT_MAX)
         sleep(0.001)
         if (!spin_lock)
@@ -351,10 +355,6 @@ try
         print("Recordings done. Press [Enter] to close.")
         readline()
       end
-    end
-    if (AUTOMATED && test_count < 3)
-      index = test_count + 1
-      sleep(TEST_TIMES[index])
     end
     test_count += 1
   end
