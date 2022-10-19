@@ -156,12 +156,10 @@ if (AUTOMATED)
   end
   DATESTAMP =  Dates.format(Dates.now(), "yyyymmdd") 
   const CSV_PREFIX = "$(DATESTAMP)_$(MODEL)-test$(TEST_NUM)_"
-  const TEST_RUNS = 4
   const TESTS = ["ShortIdle", "LongIdle", "Suspend", "Off"]
   const TEST_TIMES = [270, 630, 330]
 else
-  const TEST_RUNS = 1
-  const TESTS = []
+  const TESTS = ["None"]
 end
 
 const PYVISA = pyimport("pyvisa")
@@ -201,15 +199,15 @@ try
     end
 
     
-    test_count   = 1
-    while (test_count <= TEST_RUNS)
+    for (test in TESTS)
       println("")
-      if (AUTOMATED && test_count < 4)
-        println("Sleeping for ~$(TEST_TIMES[test_count]) seconds")
-        sleep(TEST_TIMES[test_count])
+      if (AUTOMATED && !isempty(TEST_TIMES))
+        sleep_time = popfirst!(TEST_TIMES)
+        println("Sleeping for ~$(sleep_time) seconds")
+        sleep(sleep_time)
       end
       if (AUTOMATED)
-        println("Running $(TESTS[test_count]) test for ~$(RUN_TIME) seconds")
+        println("Running $(test) test for ~$(RUN_TIME) seconds")
       end
 
       global spin_lock
@@ -347,18 +345,17 @@ try
                             )
         global csv_name
         if (AUTOMATED)
-          csv_name = "$(CSV_PREFIX)$(TESTS[test_count]).csv"
+          csv_name = "$(CSV_PREFIX)$(test).csv"
           println("  Output File  => $csv_name")
         end
         CSV.write(csv_name, csv_data)
       end
       reals_mean = round.(mean(reals), digits=2)
       println("Real Power Mean: $(reals_mean)")
-      if (!AUTOMATED || test_count > 2)
+      if (!AUTOMATED || test == "Suspend" || test == "Off")
         print("Recordings done. Press [Enter] to close.")
         readline()
       end
-      test_count += 1
     end
   end
 catch e
