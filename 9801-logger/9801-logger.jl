@@ -202,7 +202,7 @@ try
 
     global spin_lock
     iter_count   = 0
-    test_count   = 0
+    test_count   = 1
     recordings   = []
     timestamps   = []
     times        = []
@@ -229,10 +229,9 @@ try
     wait(t)
     # Use a naive spin lock to keep poll timings as close to the
     # timer as possible
-    while (test_count < TEST_RUNS)
-      if (AUTOMATED && test_count < 3)
-        index = test_count + 1
-        sleep(TEST_TIMES[index])
+    while (test_count <= TEST_RUNS)
+      if (AUTOMATED && test_count < 4)
+        sleep(TEST_TIMES[test_count])
       end
       while (iter_count < ITER_COUNT_MAX)
         sleep(0.001)
@@ -340,15 +339,13 @@ try
                             )
         global csv_name
         if (AUTOMATED)
-          index = test_count + 1
-          csv_name = "$(CSV_PREFIX)$(TESTS[index]).csv"
+          csv_name = "$(CSV_PREFIX)$(TESTS[test_count]).csv"
         end
         CSV.write(csv_name, csv_data)
       end
       reals_mean = round.(mean(reals), digits=2)
       if (AUTOMATED)
-        index = test_count + 1
-        println("$(TESTS[index])")
+        println("$(TESTS[test_count])")
       end
       println("$(reals_mean)")
       if (!AUTOMATED || test_count >= 2)
