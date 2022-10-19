@@ -354,7 +354,7 @@ try
       end
       reals_mean = round.(mean(reals), digits=2)
       println("Real Power Mean: $(reals_mean)")
-      if (!AUTOMATED || test_count >= 2)
+      if (!AUTOMATED || test_count > 2)
         print("Recordings done. Press [Enter] to close.")
         readline()
       end
