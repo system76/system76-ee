@@ -203,10 +203,12 @@ try
     
     test_count   = 1
     while (test_count <= TEST_RUNS)
+      println("")
       if (AUTOMATED && test_count < 4)
-        println("")
         println("Sleeping for ~$(TEST_TIMES[test_count]) seconds")
         sleep(TEST_TIMES[test_count])
+      end
+      if (AUTOMATED)
         println("Running $(TESTS[test_count]) test for ~$(RUN_TIME) seconds")
       end
 
