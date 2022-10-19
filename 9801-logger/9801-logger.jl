@@ -186,6 +186,7 @@ try
     ### Argument parsing
     println("9801 Logger:")
     is_polling_default = POLLING_RATE == 2 ? "(Default)" : ""
+    global csv_name
     is_name_default = isnothing(csv_name) ? "(Default)" : ""
     is_runtime_default = RUN_TIME == 330 ? "(Default)" : ""
     is_volt_min_default = VOLT_MIN == (1 - err) * 115 ? "(Default)" : ""
