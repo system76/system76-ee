@@ -199,7 +199,7 @@ try
     end
 
     
-    for (test in TESTS)
+    for test in TESTS
       println("")
       if (AUTOMATED && !isempty(TEST_TIMES))
         sleep_time = popfirst!(TEST_TIMES)
