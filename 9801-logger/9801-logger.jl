@@ -196,7 +196,7 @@ try
     println("  Run Time     => $RUN_TIME seconds $is_runtime_default")
     println("  Volt Min     => $VOLT_MIN volts $is_volt_min_default")
     println("  Volt Max     => $VOLT_MAX volts $is_volt_max_default")
-    if (!NO_CSV)
+    if (!NO_CSV && !AUTOMATED)
       println("  Output File  => $csv_name $is_name_default")
     end
 
