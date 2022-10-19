@@ -200,7 +200,9 @@ try
 
     
     for test in TESTS
-      println("")
+      if (AUTOMATED)
+        println("\n$(test) test run...")
+      end
       if (AUTOMATED && !isempty(TEST_TIMES))
         sleep_time = popfirst!(TEST_TIMES)
         println("Sleeping for ~$(sleep_time) seconds")
