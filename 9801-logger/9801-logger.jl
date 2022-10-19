@@ -205,9 +205,9 @@ try
     while (test_count <= TEST_RUNS)
       if (AUTOMATED && test_count < 4)
         println("")
-        println("Sleeping for $(TEST_TIMES[test_count]) seconds")
+        println("Sleeping for ~$(TEST_TIMES[test_count]) seconds")
         sleep(TEST_TIMES[test_count])
-        println("Running $(TESTS[test_count]) test for $RUN_TIME seconds")
+        println("Running $(TESTS[test_count]) test for ~$(RUN_TIME) seconds")
       end
 
       global spin_lock
