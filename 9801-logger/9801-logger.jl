@@ -231,7 +231,10 @@ try
     # timer as possible
     while (test_count <= TEST_RUNS)
       if (AUTOMATED && test_count < 4)
+        println("")
+        println("Sleeping for $(TEST_TIMES[test_count]) seconds")
         sleep(TEST_TIMES[test_count])
+        println("Running $(TESTS[test_count]) test for $RUN_TIME seconds")
       end
       while (iter_count < ITER_COUNT_MAX)
         sleep(0.001)
@@ -344,10 +347,7 @@ try
         CSV.write(csv_name, csv_data)
       end
       reals_mean = round.(mean(reals), digits=2)
-      if (AUTOMATED)
-        println("$(TESTS[test_count])")
-      end
-      println("$(reals_mean)")
+      println("Real Power Mean: $(reals_mean)")
       if (!AUTOMATED || test_count >= 2)
         print("Recordings done. Press [Enter] to close.")
         readline()
