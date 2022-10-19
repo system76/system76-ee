@@ -154,7 +154,7 @@ if (AUTOMATED)
     println("If using --automated-test, --model AND --test-num must be supplied")
     exit()
   end
-  DATESTAMP =  Dates.format(out.time, "yyyymmdd") 
+  DATESTAMP =  Dates.format(Dates.now(), "yyyymmdd") 
   const CSV_PREFIX = "$(DATESTAMP)_$(MODEL)-test$(TEST_NUM)_"
   const TEST_RUNS = 4
   const TESTS = ["ShortIdle", "LongIdle", "Suspend", "Off"]
