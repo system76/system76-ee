@@ -200,35 +200,8 @@ try
       println("  Output File  => $csv_name $is_name_default")
     end
 
-    global spin_lock
-    iter_count   = 0
+    
     test_count   = 1
-    recordings   = []
-    timestamps   = []
-    times        = []
-    volts        = []
-    volts_bounds = []
-    freqs        = []
-    reals        = []
-    apps         = []
-    pfacs        = []
-    currs        = []
-    apks         = []
-
-    global NO_GUI
-    if (!NO_GUI)
-      gr()
-      if (PRETTY)
-        theme(:dark)
-      end
-    end
-
-    start_time = missing
-
-    t = Timer(unlock_spin, 0, interval=(1 / POLLING_RATE))
-    wait(t)
-    # Use a naive spin lock to keep poll timings as close to the
-    # timer as possible
     while (test_count <= TEST_RUNS)
       if (AUTOMATED && test_count < 4)
         println("")
@@ -236,6 +209,36 @@ try
         sleep(TEST_TIMES[test_count])
         println("Running $(TESTS[test_count]) test for $RUN_TIME seconds")
       end
+
+      global spin_lock
+      iter_count   = 0
+      recordings   = []
+      timestamps   = []
+      times        = []
+      volts        = []
+      volts_bounds = []
+      freqs        = []
+      reals        = []
+      apps         = []
+      pfacs        = []
+      currs        = []
+      apks         = []
+
+      global NO_GUI
+      if (!NO_GUI)
+        gr()
+        if (PRETTY)
+          theme(:dark)
+        end
+      end
+
+      start_time = missing
+
+      t = Timer(unlock_spin, 0, interval=(1 / POLLING_RATE))
+      wait(t)
+      # Use a naive spin lock to keep poll timings as close to the
+      # timer as possible
+    
       while (iter_count < ITER_COUNT_MAX)
         sleep(0.001)
         if (!spin_lock)
