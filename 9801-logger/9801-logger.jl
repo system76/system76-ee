@@ -341,6 +341,10 @@ try
         CSV.write(csv_name, csv_data)
       end
       reals_mean = round.(mean(reals), digits=2)
+      if (AUTOMATED)
+        index = test_count + 1
+        println("$(TESTS[index])")
+      end
       println("$(reals_mean)")
       if (!AUTOMATED || test_count >= 2)
         print("Recordings done. Press [Enter] to close.")
