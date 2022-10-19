@@ -111,7 +111,7 @@ function parse_commandline()
     "--model"
       help = "The system model name - for use with automated test"
       arg_type = String
-    "--test-num", "-t"
+    "--test-num", "-x"
       help = "The test number - for use with automated test"
       arg_type = Int
     end
@@ -147,8 +147,21 @@ const err = 0.01 # voltage tolerance
 const VOLT_MIN = isnothing(PARSED_ARGS["volt-min"]) ? (1 - err) * 115 : PARSED_ARGS["volt-min"]
 const VOLT_MAX = isnothing(PARSED_ARGS["volt-max"]) ? (1 + err) * 115 : PARSED_ARGS["volt-max"]
 const AUTOMATED = PARSED_ARGS["automated-test"]
-const MODEL = PARSED_ARGS["model"]
-const TEST_NUM = PARSED_ARGS["test-num"]
+if (AUTOMATED)
+  const MODEL = PARSED_ARGS["model"]
+  const TEST_NUM = PARSED_ARGS["test-num"]
+  if isnothing(MODEL) || isnothing(TEST_NUM)
+    println("If using --automated-test, --model AND --test-num must be supplied")
+    exit()
+  end
+  DATESTAMP =  Dates.format(out.time, "yyyymmdd") 
+  const CSV_PREFIX = "$(DATESTAMP)_$(MODEL)-test$(TEST_NUM)_"
+  const TEST_RUNS = 4
+  const TESTS = ["ShortIdle", "LongIdle", "Suspend", "Off"]
+else
+  const TEST_RUNS = 1
+  const TESTS = []
+end
 
 const PYVISA = pyimport("pyvisa")
 const RM = PYVISA.ResourceManager()
