@@ -205,11 +205,13 @@ try
       end
       if (AUTOMATED && !isempty(TEST_TIMES))
         sleep_time = popfirst!(TEST_TIMES)
-        println("Sleeping for ~$(sleep_time) seconds")
+        ts = Dates.format(Dates.now(), "HH:MM:SS")
+        println("$(ts): Sleeping for ~$(sleep_time) seconds")
         sleep(sleep_time)
       end
       if (AUTOMATED)
-        println("Running $(test) test for ~$(RUN_TIME) seconds")
+        ts = Dates.format(Dates.now(), "HH:MM:SS")
+        println("$(ts): Running $(test) test for ~$(RUN_TIME) seconds")
       end
 
       global spin_lock
