@@ -200,9 +200,7 @@ try
 
     
     for test in TESTS
-      if (AUTOMATED)
-        println("\n$(test) test run...")
-      end
+      println("")
       if (AUTOMATED && !isempty(TEST_TIMES))
         sleep_time = popfirst!(TEST_TIMES)
         ts = Dates.format(Dates.now(), "HH:MM:SS")
