@@ -69,6 +69,117 @@ function fix_bounds_bug(freqs, reals, apps, out)
   push!(apps,  out.app )
 end
 
+function poll_9801()
+  start_time = missing
+  iter_count = 0
+  t = Timer(0, interval=(1/POLLING_RATE))
+  global out_chan = Channel{Tuple}((POLLING_RATE * 10))
+  while (iter_count < ITER_COUNT_MAX)
+    wait(t)
+    if (ismissing(start_time))
+      start_time = Dates.now()
+    end
+
+    out = CONNECTION.query(concat_cmd([VOLT, FREQ, REAL, APP, PFAC, CURR, APK])) |> into_recording
+    time = round((Dates.value(out.time) - Dates.value(start_time)) / 1000, digits = 3)
+    timestamp =  Dates.format(out.time, "yyyy-mm-dd HH:MM:SS.sss")
+
+    put!(out_chan, (out, time, timestamp))
+
+    iter_count += 1
+  end
+  close(out_chan)
+end
+
+function aggregate_data(volts, times, timestamps, volts_bounds, freqs, reals, apps, pfacs, currs, apks, recordings)
+  global out_chan
+  for (out, time, timestamp)=out_chan
+    volt_safe = false
+    current = out.volt
+    if (!NO_GUI && length(volts) > 0)
+      global VOLT_MIN
+      global VOLT_MAX
+      prev = last(volts)
+      # Describes the intersection and slope of the line
+      # Goes up from below MIN to above MAX
+      if (prev < VOLT_MIN && current > VOLT_MAX)
+     	  interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
+        fix_bounds_bug(freqs, reals, apps, out)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, (VOLT_MIN + VOLT_MAX)/2, true)
+        fix_bounds_bug(freqs, reals, apps, out)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
+        fix_bounds_bug(freqs, reals, apps, out)
+      # Goes down from above MAX to below MIN
+      elseif (prev > VOLT_MAX && current < VOLT_MIN)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
+        fix_bounds_bug(freqs, reals, apps, out)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, (VOLT_MIN + VOLT_MAX)/2, true)
+        fix_bounds_bug(freqs, reals, apps, out)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
+        fix_bounds_bug(freqs, reals, apps, out)
+      # Goes up from middle above MAX
+      elseif (VOLT_MIN < prev < VOLT_MAX && current > VOLT_MAX)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
+        fix_bounds_bug(freqs, reals, apps, out)
+      # Goes down from above MAX to middle
+      elseif (prev > VOLT_MAX && VOLT_MIN < current < VOLT_MAX)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
+        fix_bounds_bug(freqs, reals, apps, out)
+        volt_safe = true
+      # Goes down from middle below MIN
+      elseif (VOLT_MIN < prev < VOLT_MAX && current < VOLT_MIN)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
+        fix_bounds_bug(freqs, reals, apps, out)
+      # Goes up from below MIN to middle
+      elseif (prev < VOLT_MIN && VOLT_MIN < current < VOLT_MAX)
+        interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
+        fix_bounds_bug(freqs, reals, apps, out)
+        volt_safe = true
+      # Current point is in middle
+      elseif (VOLT_MIN < current < VOLT_MAX)
+        volt_safe = true
+      end
+
+    # Current point is in middle and first recorded data point
+    elseif (VOLT_MIN < current < VOLT_MAX)
+      volt_safe = true
+    end
+
+    push!(timestamps, timestamp)
+    push!(times, time    )
+    push!(volts, out.volt)
+    push!(volts_bounds, volt_safe ? NaN : out.volt)
+    push!(freqs, out.freq)
+    push!(reals, out.real)
+    push!(apps,  out.app )
+    push!(pfacs, out.pfac)
+    push!(currs, out.curr)
+    push!(apks,  out.apk )
+    push!(recordings, out)
+  end
+end
+
+function display_data(timestamps, times, recordings, volts, volts_bounds, freqs, apps, reals)
+  iter = 0
+  t = Timer(0, interval=1)
+  while (iter < RUN_TIME)
+    wait(t)
+    global NO_GUI
+	  if (!NO_GUI)
+	    p1 = plot(times, [volts, volts_bounds], label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
+	    p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
+	    p3 = plot(times, [apps, reals], label=["Apparent [VA]" "Real [W]"], xlabel="Runtime [s]", ylabel="Power", legend=:outertopright)
+	    p4 = (iter > 0) ? histogram([apps, reals],label=["Apparent [VA]" "Real [W]"], xlabel="Power", legend=:outertopright, linecolor=:match) : histogram([11,12,13,14,15], linecolor=:match)
+	    display(plot(p1, p2, p3, p4, layout=@layout([p1 p2; p3; p4]), plot_title=SUPER_TITLE))
+    elseif (NO_GUI && !AUTOMATED)
+      timestamp = last(timestamps)
+      time = last(times)
+      out = last(recordings)
+      println("$timestamp ($time): Volts=$(out.volt), Freq=$(out.freq), Pow-Real=$(out.real), Pow-App=$(out.app)")
+    end
+  end
+end
+
 function parse_commandline()
   s = ArgParseSettings(prog="9801 Logger",
                       description="Connect to BK Precision power supply and log recordings in both GUI and CSV",
@@ -132,7 +243,7 @@ end
 ### Consts
 const PARSED_ARGS = parse_commandline()
 csv_name = PARSED_ARGS["csv-name"]
-if (PARSED_ARGS["polling-rate"] in (1, 2, 5, 10))
+if (PARSED_ARGS["polling-rate"] in (1, 2, 5, 10, 15, 30, 60))
   const POLLING_RATE = PARSED_ARGS["polling-rate"]
 else
   println("Invalid polling rate. Setting to default of 2Hz.")
@@ -175,7 +286,7 @@ const CURR = "MEAS:CURR?"
 const APK  = "MEAS:CURR:PEAK?"
 
 const ITER_COUNT_MAX = POLLING_RATE * RUN_TIME
-global spin_lock = false
+global out_chan
 
 ### Main
 try
@@ -212,7 +323,6 @@ try
         println("$(ts): Running $(test) test for ~$(RUN_TIME) seconds")
       end
 
-      global spin_lock
       iter_count   = 0
       recordings   = []
       timestamps   = []
@@ -234,105 +344,12 @@ try
         end
       end
 
-      start_time = missing
-
-      t = Timer(unlock_spin, 0, interval=(1 / POLLING_RATE))
-      wait(t)
-      # Use a naive spin lock to keep poll timings as close to the
-      # timer as possible
-    
-      while (iter_count < ITER_COUNT_MAX)
-        sleep(0.001)
-        if (!spin_lock)
-	        global NO_GUI
-	        if (!NO_GUI)
-	          p1 = plot(times, [volts, volts_bounds], label=false, xlabel="Runtime [s]", ylabel="Voltage [V]")
-	          p2 = plot(times, freqs, label=false, xlabel="Runtime [s]", ylabel="Frequency [Hz]")
-	          p3 = plot(times, [apps, reals], label=["Apparent [VA]" "Real [W]"], xlabel="Runtime [s]", ylabel="Power", legend=:outertopright)
-	          p4 = (iter_count > 0) ? histogram([apps, reals],label=["Apparent [VA]" "Real [W]"], xlabel="Power", legend=:outertopright, linecolor=:match) : histogram([11,12,13,14,15], linecolor=:match)
-	          display(plot(p1, p2, p3, p4, layout=@layout([p1 p2; p3; p4]), plot_title=SUPER_TITLE))
-	        end
-
-          if (ismissing(start_time))
-      	    start_time = Dates.now()
-          end
-
-          out = CONNECTION.query(concat_cmd([VOLT, FREQ, REAL, APP, PFAC, CURR, APK])) |> into_recording
-          time = round((Dates.value(out.time) - Dates.value(start_time)) / 1000, digits = 3)
-          timestamp =  Dates.format(out.time, "yyyy-mm-dd HH:MM:SS.sss")
-
-      	  volt_safe = false
-      	  current = out.volt
-      	  if (!NO_GUI && length(volts) > 0)
-      	    global VOLT_MIN
-      	    global VOLT_MAX
-      	    prev = last(volts)
-    	      # Describes the intersection and slope of the line
-    	      # Goes up from below MIN to above MAX
-            if (prev < VOLT_MIN && current > VOLT_MAX)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, (VOLT_MIN + VOLT_MAX)/2, true)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	    # Goes down from above MAX to below MIN
-      	    elseif (prev > VOLT_MAX && current < VOLT_MIN)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, (VOLT_MIN + VOLT_MAX)/2, true)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	    # Goes up from middle above MAX
-      	    elseif (VOLT_MIN < prev < VOLT_MAX && current > VOLT_MAX)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	    # Goes down from above MAX to middle
-      	    elseif (prev > VOLT_MAX && VOLT_MIN < current < VOLT_MAX)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MAX)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      volt_safe = true
-      	    # Goes down from middle below MIN
-      	    elseif (VOLT_MIN < prev < VOLT_MAX && current < VOLT_MIN)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	    # Goes up from below MIN to middle
-      	    elseif (prev < VOLT_MIN && VOLT_MIN < current < VOLT_MAX)
-      	      interpolate_points(times, volts, volts_bounds, out.volt, time, VOLT_MIN)
-      	      fix_bounds_bug(freqs, reals, apps, out)
-      	      volt_safe = true
-      	    # Current point is in middle
-      	    elseif (VOLT_MIN < current < VOLT_MAX)
-      	      volt_safe = true
-      	    end
-
-        	# Current point is in middle and first recorded data point
-      	  elseif (VOLT_MIN < current < VOLT_MAX)
-      	    volt_safe = true
-      	  end
-
-          push!(timestamps, timestamp)
-          push!(times, time    )
-          push!(volts, out.volt)
-          push!(volts_bounds, volt_safe ? NaN : out.volt)
-          push!(freqs, out.freq)
-          push!(reals, out.real)
-          push!(apps,  out.app )
-          push!(pfacs, out.pfac)
-          push!(currs, out.curr)
-          push!(apks,  out.apk )
-          push!(recordings, out)
-
-          if (NO_GUI && !AUTOMATED)
-            println("$timestamp ($time): Volts=$(out.volt), Freq=$(out.freq), Pow-Real=$(out.real), Pow-App=$(out.app)")
-          end
-
-          iter_count += 1
-          global spin_lock = true
-        end
+      @sync begin
+        Threads.@spawn poll_9801()
+        Threads.@spawn aggregate_data(volts, times, timestamps, volts_bounds, freqs, reals, apps, pfacs, currs, apks, recordings)
+        display_data(timestamps, times, recordings, volts, volts_bounds, freqs, apps, reals)
       end
-      close(t)
+      
       global NO_CSV
       if (!NO_CSV)
         csv_data = DataFrame("Timestamp [yyyy-mm-dd HH:MM:SS.sss]" => timestamps,
